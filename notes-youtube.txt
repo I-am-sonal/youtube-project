@@ -1,0 +1,35 @@
+09-03-2024
+
+Machine Coding Interview && Building YouTube
+
+Requirements clarification (discuss it before starting the project):
+->Features (check what are the features that we are going to build in the project)
+->Tech Stack (UI layer + Data layer) 
+            =>Tailwind css for frontend design stylingand 
+	    =>Redux store for backend database management
+	    => Forms management - Formic librabry
+	    => Router management - React-router-dom for routing
+    	    => Bundler
+	    => jest - react testing library
+ 	    => storage
+
+Planning:
+we will be using create-react-app (else we can create the project from scratch and install bundler, babel, parcel and start from 0)
+
+
+========================================================================
+
+<StrictMode>
+<StrictMode> lets you find common bugs in your components early during development,
+Use StrictMode to enable additional development behaviors and warnings for the component tree inside:
+
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
