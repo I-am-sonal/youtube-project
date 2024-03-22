@@ -1,3 +1,10 @@
+https://bitbucket.org/namastedev/my-youtube/src/master/src/components/
+========================================================================
+pending:
+
+nested comments fetch from API
+Infinite scrolling
+========================================================================
 09-03-2024
 
 Machine Coding Interview && Building YouTube
@@ -33,3 +40,404 @@ root.render(
     <App />
   </StrictMode>
 );
+
+========================================================================
+
+search toggle functionality:
+
+to make the store common for header and sidebar, will will create global store
+
+1)install redux
+npm i @reduxjs/toolkit
+npm i react-redux
+
+2) create store.js inside utils folder
+
+3)create slice for perticular store
+
+4) add newly create slice inside store
+
+5) to use store add <provider> to the app.js (wrapp all the components inside it)
+<Provider store={store}></Provider>
+
+6)
+<img
+          className="h-10 mr-2 hamburger-menu cursor-pointer"
+          alt="menu"
+          onClick={() => toggleMenuHandler()}
+          src="https://static.vecteezy.com/system/resources/previews/021/190/402/original/hamburger-menu-filled-icon-in-transparent-background-basic-app-and-web-ui-bold-line-icon-eps10-free-vector.jpg"
+        />
+
+7)head.js > onclick dispatch
+
+const Head = () => {
+  const dispatch = useDispatch();
+
+  const toggleMenuHandler = () => {
+    dispatch(toggleMenu());
+  };
+
+8)
+sidebar.js > condition to show the toggled data
+
+const Sidebar = () => {
+  const isMenuOpen = useSelector((store) => store.app.isMenuOpen);
+
+  //or Early Return Pattern
+  if (!isMenuOpen) return null;
+
+  //or return !isMenuOpen ? null : (
+
+  return !isMenuOpen ? null : (
+    <div className="sidebar-wrapper shadow-lg p-4">
+      <div className="sidebar-category py-4">
+
+
+========================================================================
+
+Youtube API key:
+https://console.cloud.google.com/apis/credentials?project=tresmode-145311
+
+https://developers.google.com/youtube/v3/docs/search/list
+
+Error:
+YouTube Data API v3 has not been used in project 1083837499278 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=1083837499278 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+
+solution: you need to enable the api key first to use it:
+
+========================================================================
+Videos Watch page:
+Router is required for page navigation
+
+npm i react-router-dom
+
+app.js
+add path to BrowserRouter:
+
+ const appRouter = createBrowserRouter([{
+    path: "/",
+    element: <Body/>,
+
+    and remove body component added in return statement instead add <RouterProvider router={appRouter} />:
+
+    return (
+    <Provider store={store}>
+      <div className="App text-center">
+        <Head />
+        <RouterProvider router={appRouter} /> //instead of <Body /> component
+    )
+
+here:
+whenver "/" is there it will load approuter with body component
+for children, it will check where the <outlet> is written in the component.
+
+    Body.js :
+
+    return (
+    <div className="flex">
+      <Sidebar />
+      <MainContainer />
+    </div>
+  );
+
+  we can have <MainContainer /> or <watchPage /> inside it to it onto the page.
+  to make it dynamic use <outlet>:
+  Body.js :
+
+const Body = () => {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <Outlet />
+    </div>
+  );
+};
+  ========================================================================
+Higher Order component:
+
+function that takes a component ..do some changes and returns a enhanced new component
+(without changing the original component)
+e.g. youtube video card is original component and we can add order and do some css and return new enhanced
+component (reusability ..saves time, we do not have to create new component from scratch,
+we can use the existing one)
+
+VideoCard.js
+
+export const BorderedVideoCard = ({ info }) => {
+  return (
+    <div className="border border-red-700 m-2 p-2 bg-red">
+      <VideoCard info={info} />
+    </div>
+  );
+};
+export default VideoCard;
+
+VideoContainer.js
+
+import VideoCard, { BorderedVideoCard } from "./VideoCard";
+
+
+return (
+    <div className="flex flex-wrap">
+      {videos[0] && <BorderedVideoCard info={videos[0]} />}
+      </div>
+)
+
+========================================================================
+
+Debouncing:
+Whenver we write anything in search, it skips some of the events and showing results after every 2-3 keypress.
+
+typing slow: difference between every key strokes is 200ms around
+typing fast: its 30ms
+
+on typing they are showing results : better user experience
+
+Debouncing with 200ms (condition):
+if difference between 2 key strokes is <200ms - Decline the API call
+if >200ms make an API call
+
+Search functionality:
+
+we need to use useEffect whenever the user search in the input field.
+
+example:
+
+
+const Head = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    //API call
+    console.log(searchQuery);
+
+    // Make an API call on every key press
+    //but the difference between 2 API calls is <200ms
+    //Decline the API call
+    const timer = setTimeout(() => getSearchSuggestions(), 200);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]); //useEffect will be called every time the search query changes
+
+
+  /*
+{
+* - key - i
+* - render the component
+* - useEffect();
+* - start timer => make API call after 200 ms
+*
+- key - ip 
+* - re-render the component
+- Even if user enter ip even before the 200ms then it destroy the component(useEffect return method)
+* - useEffect();
+* - start timer => make API call after 200 ms (this will be new setTimeout function)
+* every keypress is stored in new variable hence everytime new settimeout function will be called after 200ms 
+* hence we need to clear the settimeout that we have set.
+*
+*
+*settimeout(200ms) - if user does not enter anything within 200ms - it will make an API call
+}
+*/
+
+***********************Important
+
+caching in search functionality:
+if users search for India -> it will make an API call
+if user search for India again it will wait for user to write other keywords as it already made an API call
+and refer the data from cache.
+
+Power of Redux:
+We can make the search results API into the Redux Store :))
+
+search will use (Debouncing, live API call, caching)
+
+========================================================================
+
+LRU cache => its Least Recently Used cache - (data structure) - read 
+
+means we can restrict our cache size to 100 keys
+if it exceeds by 100 , start removing from the top.
+
+========================================================================
+
+(n) level nested comments:
+we need to use recursion method to use the replies on the comment functionality:
+
+========================================================================
+Live Chat >>>>> Infinite Scroll >>>>>>>>> Pagination
+
+Live Chat challenges:
+- Get the data live 
+- Update the UI(without freezing the UI layer)
+- Data (Live)
+
+The new div is getting appended whenver a user enters any comment.
+The new div is pushed into the page.
+
+if we push too many comments (divs) onto the page, the page can bloats.
+the page size will get increased. it will become slow.
+
+in live chat we need to update the UI in efficient way with better user experience.
+
+- Data (Live) 
+if our data is not live -> pass data into useEffect, and show it on UI.
+- but, for updating data regularly using live stream, 
+there are 2 ways we can handle this-
+
+1) Web Sockets (UI <--- ---> S) (no regular Interval)
+- 2 way connection, handshake between Ui and server (backend data)
+hence you can quickly send data from either sides, its a bidirectional live data.
+- first socket can send data in a 1 minute, 2nd socket can send data in 2 min.
+- Initial connection might take some time.
+- exmaple: Live Trading platforms like Zerodha, crypto, whatsapp 
+- it shows data in real time.
+
+In youtube live stram, it does not show timestamp ..because order does not matter :p
+
+Not freezing the page - bcz it deletes the older chats very quickly after certain point.
+
+Youtube configure the data that should support all the browsers with older versions as well.
+
+2) API Polling (Long Polling) -( ui <-- s) (after an Interval)
+data send from server to UI
+- data in unidirectional
+- UI keep polling data after 1 second or set Interval of time.
+- or check data after 10 sec to check if any new data is there or not.
+- exmaple: Gmail, cricbuzz
+
+
+here for youtube project 
+for live chat we are using API Polling:
+2 ways:
+1) state management (it will freeze the state)
+2) Redux store management (best way to use the API data and append it to the UI)
+
+1.create chatSlice.js
+2.add slice to the store => store.js
+3.test => if we have the slice added into the redux store using chrome extension.
+4.dispatch the action
+5.subscribe to the messages that we have created.
+
+
+========================================================================
+utils > helper.js
+Live chat - generate random name in javascript
+
+however, if we continuously changing the data onto the UI, our page can exploads.
+we need to smartly optimize it.
+
+use splice to only use 10 messages and remove 1 from top :
+chatSlice.js
+reducers: {
+    addMessage: (state, action) => {
+      state.messages.splice(10, 1); // do not hardcode the value instead use constant variable.
+      state.messages.unshift(action.payload);
+    },
+  },
+
+
+constant.js
+export const OFFSET_LIVE_CHAT = 10;
+
+chatSlice.js
+import { OFFSET_LIVE_CHAT } from "./constants";
+
+
+reducers: {
+    addMessage: (state, action) => {
+      state.messages.splice(OFFSET_LIVE_CHAT, 1);
+      state.messages.unshift(action.payload);
+    },
+  },
+
+========================================================================
+Custom live message on submit should add it into the live chat:
+
+we need to use <form> so that on submit it will push the entered value to the live chat data.
+
+check LiveChat.js
+
+========================================================================
+strict mode - react internally checks the code and shows errror(inly for development mode / not for production)
+
+if you have not written the code properly then react checks the code and finds the difference between the 
+two rendering 
+for example:
+in console you can see:
+installhook.js
+========================================================================
+Hooks in React: useMemo, useCallback, useRef Hooks
+
+2 main core hooks in react:
+1)useState
+2)useEffect
+
+useparams is given by router
+
+***********useMemo:
+To increase the performance of your application:
+useMemo : cache results of calculations between re-renders.
+example: 
+If the operation is too expensive.
+
+if input text is used, whenver we type anything inside it, the reconcilliation happens,
+the component re-renders.
+
+problem: if function have state variables ,it will re-render the component again and again.
+example: find nth prime number in javascript
+solution: to handle the heavy operations we can memoize it.
+
+>> useMemo - caching the value returned by the findPrime function
+useMemo is a React Hook that lets you cache the result of a calculation between re-renders.
+
+const cachedValue = useMemo(calculateValue, dependencies)
+
+it will cache the result of a prime number until the dependencies changes.
+basically we are memoizing the other operations that can be updated using states.
+too many updates (state changes) in a single component.
+
+------------------------------------------------------------------------------------
+
+***********useCallback: caching the function definition
+
+useCallback:
+useCallback is a React Hook that lets you cache a function definition between re-renders.
+
+const cachedFn = useCallback(fn, dependencies)
+------------------------------------------------------------------------------------
+
+***********useRef: reference a value that’s not needed for rendering.
+if there is any data that you dont wants to re-render onto the page.
+
+useRef - (use if dont want to reset the value, it should hold the updated value to itself)
+useRef is a React Hook that lets you reference a value that’s not needed for rendering.
+
+const ref = useRef(initialValue)
+
+state variable - it will rerender the component and update the value on the UI.
+normal variable - it will update the value in the backend as per logic, hence it will not udpate the UI.
+but once the component rerenders it will refreshes the value of x, wipes of the values of x, deletes it and again start with x=1.
+
+because when a function is created, whole new memory location is created, whole new thread of execution starts.
+it pushed into the callstack.
+whenver it rerender, new memory space will be created for that function again.
+
+useRef = if we dont wants to reset the value of a normal variable again to x=1.
+
+const ref = useRef(initialValue)
+const ref = useRef(0)
+
+its not like a normal variable as ref = 0,
+its like an object =>
+ref = {
+  current : 0
+}
+
+check: console.log(ref);
+
+usecase: 
+If we have used setinterval for every 1 sec and cleared the Interval so that,
+when user goes on to the different page, it will stop.
+but , if we want to stop that interval only when user clicks on a button.
